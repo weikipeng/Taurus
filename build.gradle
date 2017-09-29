@@ -1,9 +1,15 @@
 buildscript {
     repositories {
+        mavenLocal()
+        jcenter()
         mavenCentral()
+
+        maven {
+            url "https://maven.google.com"
+        }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.2.3'
+        classpath 'com.android.tools.build:gradle:2.3.3'
         classpath 'com.github.dcendents:android-maven-gradle-plugin:1.5'
     }
 }
@@ -17,8 +23,57 @@ allprojects {
     group = GROUP
 
     repositories {
+        mavenLocal()
+        jcenter()
         mavenCentral()
+
+        maven {
+            url "https://maven.google.com"
+        }
     }
 }
 
-apply plugin: 'android-reporting'
+//apply plugin: 'android-reporting'
+
+// Define versions in a single place
+// 在一个地方定义所有工具的版本号
+ext {
+    // Sdk and tools
+    minSdkVersion = 14
+    targetSdkVersion = 25
+    compileSdkVersion = 25
+    buildToolsVersion = '26.0.0'
+
+    // App dependencies
+    supportLibraryVersion = '25.4.0'
+    supportTestLibraryVersion = '0.5'
+    guavaVersion = '18.0'
+    junitVersion = '4.12'
+    mockitoVersion = '1.10.19'
+    powerMockito = '1.6.5'
+    hamcrestVersion = '1.3'
+    runnerVersion = '0.4.1'
+    rulesVersion = '0.4.1'
+    espressoVersion = '2.2.1'
+
+    rxJavaVersion= '2.1.0'
+    rxAndroidVersion= '2.0.1'
+
+    //RxBinding
+    rxbindingVersion = '2.0.0'
+    //Okhttp
+    okHttpVersion='3.7.0'
+    //retrofit
+    retrofitVersion='2.3.0'
+
+    butterknifeVersion='8.4.0'
+    //svn 最后提交的版本号
+    svnRevision = '0'
+    // Developer Tools
+    stethoVersion    ="1.5.0"
+    leakCanaryVersion       ="1.5"
+    tinyDancerVersion       ="0.0.9"
+    lynxVersion             ="1.6"
+    processPhoenixVersion   ="1.0.2"
+    blockcanaryVersion      ="1.3.1"
+}
