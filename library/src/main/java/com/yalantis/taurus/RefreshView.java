@@ -154,7 +154,7 @@ public class RefreshView extends Drawable implements Drawable.Callback, Animatab
     }
 
     public void offsetTopAndBottom(int offset) {
-        DevLogTool.getInstance(mContext).saveLog("------下移动画布局offsetTopAndBottom:" + offset);
+        DevLogTool.getInstance(mContext).saveLog("------下移动画布局 offsetTopAndBottom: " + offset);
         mTop += offset;
         invalidateSelf();
     }

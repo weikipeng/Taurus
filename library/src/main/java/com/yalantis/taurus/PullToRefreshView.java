@@ -235,7 +235,6 @@ public class PullToRefreshView extends ViewGroup {
                                 + "\ntensionSlingshotPercent:" + tensionSlingshotPercent
                                 + "\ntensionPercent:" + tensionPercent
                                 + "\nslingshotDist:" + slingshotDist
-                                + "\nboundedDragPercent:" + boundedDragPercent
                                 + "\nextraMove:" + extraMove
                                 + "\ntargetY:" + targetY
                                 + "\nmCurrentOffsetTop:" + mCurrentOffsetTop
@@ -261,8 +260,8 @@ public class PullToRefreshView extends ViewGroup {
                 final float overScrollTop = (y - mInitialMotionY) * DRAG_RATE;
                 mIsBeingDragged = false;
                 DevLogTool.getInstance(getContext()).saveLog("-----onInterceptTouchEvent MotionEvent.ACTION_CANCEL"
-                    + "\noverScrollTop"+overScrollTop
-                    + "\nmTotalDragDistance"+mTotalDragDistance
+                    + "\noverScrollTop:     "+overScrollTop
+                    + "\nmTotalDragDistance:    "+mTotalDragDistance
                 );
                 if (overScrollTop > mTotalDragDistance) {
                     setRefreshing(true, true);
@@ -373,8 +372,8 @@ public class PullToRefreshView extends ViewGroup {
 
     private void setRefreshing(boolean refreshing, final boolean notify) {
         DevLogTool.getInstance(getContext()).saveLog("-----setRefreshing"
-                + " refreshing"+refreshing
-                + " notify"+notify
+                + " refreshing: "+refreshing
+                + " notify: "+notify
         );
         if (mRefreshing != refreshing) {
             mNotify = notify;
@@ -462,10 +461,10 @@ public class PullToRefreshView extends ViewGroup {
         int bottom = getPaddingBottom();
 
         DevLogTool.getInstance(getContext()).saveLog("------onLayout left:" + left
-                + " 下拉刷新视图 top:" + top
-                + " top + mCurrentOffsetTop:" + (top + mCurrentOffsetTop)
-                + " 下拉刷新视图 top + height - bottom:" + (top + height - bottom)
-                + " top + height - bottom + mCurrentOffsetTop:" + (top + height - bottom + mCurrentOffsetTop)
+                + " \nmRefreshImageView top:" + top
+                + " \n目标 mTarget top:" + (top + mCurrentOffsetTop)
+                + " \nmRefreshImageView bottom:" + (top + height - bottom)
+                + " \n目标 mTarget bottom:" + (top + height - bottom + mCurrentOffsetTop)
         );
 
         mTarget.layout(left, top + mCurrentOffsetTop, left + width - right, top + height - bottom + mCurrentOffsetTop);
