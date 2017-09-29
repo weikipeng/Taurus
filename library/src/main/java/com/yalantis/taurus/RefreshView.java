@@ -67,8 +67,11 @@ public class RefreshView extends Drawable implements Drawable.Callback, Animatab
     private float mWindLineWidth;
     private boolean mNewWindSet;
 
+    /**飞机宽度中心*/
     private int mJetWidthCenter;
+    /**飞机高度中心*/
     private int mJetHeightCenter;
+    /**飞机距离顶部的距离*/
     private float mJetTopOffset;
     private int mFrontCloudHeightCenter;
     private int mFrontCloudWidthCenter;
@@ -120,6 +123,11 @@ public class RefreshView extends Drawable implements Drawable.Callback, Animatab
         mScreenWidth = mContext.getResources().getDisplayMetrics().widthPixels;
         mJetTopOffset = mParent.getTotalDragDistance() * 0.5f;
         mTop = -mParent.getTotalDragDistance();
+
+        DevLogTool.getInstance(mContext).saveLog("屏幕宽度:"+mScreenWidth
+                +" 飞机距离顶部的距离mJetTopOffset:"+mJetTopOffset
+                +" mTop:"+mTop
+        );
     }
 
     private void createBitmaps() {
@@ -140,6 +148,8 @@ public class RefreshView extends Drawable implements Drawable.Callback, Animatab
     }
 
     public void offsetTopAndBottom(int offset) {
+        DevLogTool.getInstance(mContext).saveLog("------下移动画布局offsetTopAndBottom:"+offset
+        );
         mTop += offset;
         invalidateSelf();
     }

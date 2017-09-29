@@ -18,30 +18,33 @@ import android.widget.ImageView;
 
 public class PullToRefreshView extends ViewGroup {
 
-    private static final int DRAG_MAX_DISTANCE = 120;
-    private static final float DRAG_RATE = .5f;
+    private static final int   DRAG_MAX_DISTANCE               = 120;
+    private static final float DRAG_RATE                       = .5f;
     private static final float DECELERATE_INTERPOLATION_FACTOR = 2f;
 
     public static final int MAX_OFFSET_ANIMATION_DURATION = 700;
-    public static final int RESTORE_ANIMATION_DURATION = 2350;
+    public static final int RESTORE_ANIMATION_DURATION    = 2350;
 
     private static final int INVALID_POINTER = -1;
 
-    private View mTarget;
-    private ImageView mRefreshImageView;
-    private Interpolator mDecelerateInterpolator;
-    private int mTouchSlop;
-    private int mTotalDragDistance;
-    private RefreshView mRefreshView;
-    private float mCurrentDragPercent;
-    private int mCurrentOffsetTop;
-    private boolean mRefreshing;
-    private int mActivePointerId;
-    private boolean mIsBeingDragged;
-    private float mInitialMotionY;
-    private int mFrom;
-    private float mFromDragPercent;
-    private boolean mNotify;
+    private View              mTarget;
+    private ImageView         mRefreshImageView;
+    private Interpolator      mDecelerateInterpolator;
+    private int               mTouchSlop;
+    /**
+     * 总共可以拖动的距离
+     */
+    private int               mTotalDragDistance;
+    private RefreshView       mRefreshView;
+    private float             mCurrentDragPercent;
+    private int               mCurrentOffsetTop;
+    private boolean           mRefreshing;
+    private int               mActivePointerId;
+    private boolean           mIsBeingDragged;
+    private float             mInitialMotionY;
+    private int               mFrom;
+    private float             mFromDragPercent;
+    private boolean           mNotify;
     private OnRefreshListener mListener;
 
     public PullToRefreshView(Context context) {
@@ -55,6 +58,8 @@ public class PullToRefreshView extends ViewGroup {
         mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
         float density = context.getResources().getDisplayMetrics().density;
         mTotalDragDistance = Math.round((float) DRAG_MAX_DISTANCE * density);
+        DevLogTool.getInstance(context).saveLog("手机设备密度density:" + density
+                + "\n可以拖动的距离：" + mTotalDragDistance);
 
         mRefreshImageView = new ImageView(context);
         mRefreshView = new RefreshView(getContext(), this);
@@ -65,6 +70,9 @@ public class PullToRefreshView extends ViewGroup {
         ViewCompat.setChildrenDrawingOrderEnabled(this, true);
     }
 
+    /**
+     * 获取总共可以拖动的距离
+     */
     public int getTotalDragDistance() {
         return mTotalDragDistance;
     }
@@ -157,22 +165,22 @@ public class PullToRefreshView extends ViewGroup {
                     return false;
                 }
 
-                final float y = MotionEventCompat.getY(ev, pointerIndex);
-                final float yDiff = y - mInitialMotionY;
+                final float y         = MotionEventCompat.getY(ev, pointerIndex);
+                final float yDiff     = y - mInitialMotionY;
                 final float scrollTop = yDiff * DRAG_RATE;
                 mCurrentDragPercent = scrollTop / mTotalDragDistance;
                 if (mCurrentDragPercent < 0) {
                     return false;
                 }
                 float boundedDragPercent = Math.min(1f, Math.abs(mCurrentDragPercent));
-                float extraOS = Math.abs(scrollTop) - mTotalDragDistance;
-                float slingshotDist = mTotalDragDistance;
+                float extraOS            = Math.abs(scrollTop) - mTotalDragDistance;
+                float slingshotDist      = mTotalDragDistance;
                 float tensionSlingshotPercent = Math.max(0,
                         Math.min(extraOS, slingshotDist * 2) / slingshotDist);
                 float tensionPercent = (float) ((tensionSlingshotPercent / 4) - Math.pow(
                         (tensionSlingshotPercent / 4), 2)) * 2f;
                 float extraMove = (slingshotDist) * tensionPercent / 2;
-                int targetY = (int) ((slingshotDist * boundedDragPercent) + extraMove);
+                int   targetY   = (int) ((slingshotDist * boundedDragPercent) + extraMove);
 
                 mRefreshView.setPercent(mCurrentDragPercent);
                 setTargetOffsetTop(targetY - mCurrentOffsetTop, true);
@@ -190,8 +198,8 @@ public class PullToRefreshView extends ViewGroup {
                 if (mActivePointerId == INVALID_POINTER) {
                     return false;
                 }
-                final int pointerIndex = MotionEventCompat.findPointerIndex(ev, mActivePointerId);
-                final float y = MotionEventCompat.getY(ev, pointerIndex);
+                final int   pointerIndex  = MotionEventCompat.findPointerIndex(ev, mActivePointerId);
+                final float y             = MotionEventCompat.getY(ev, pointerIndex);
                 final float overScrollTop = (y - mInitialMotionY) * DRAG_RATE;
                 mIsBeingDragged = false;
                 if (overScrollTop > mTotalDragDistance) {
@@ -276,9 +284,9 @@ public class PullToRefreshView extends ViewGroup {
     };
 
     private void moveToStart(float interpolatedTime) {
-        int targetTop = mFrom - (int) (mFrom * interpolatedTime);
+        int   targetTop     = mFrom - (int) (mFrom * interpolatedTime);
         float targetPercent = mFromDragPercent * (1.0f - interpolatedTime);
-        int offset = targetTop - mTarget.getTop();
+        int   offset        = targetTop - mTarget.getTop();
 
         mCurrentDragPercent = targetPercent;
         mRefreshView.setPercent(mCurrentDragPercent);
@@ -286,9 +294,9 @@ public class PullToRefreshView extends ViewGroup {
     }
 
     private void moveToEnd(float interpolatedTime) {
-        int targetTop = mFrom - (int) (mFrom * interpolatedTime);
+        int   targetTop     = mFrom - (int) (mFrom * interpolatedTime);
         float targetPercent = mFromDragPercent * (1.0f + interpolatedTime);
-        int offset = targetTop - mTarget.getTop();
+        int   offset        = targetTop - mTarget.getTop();
 
         mCurrentDragPercent = targetPercent;
         mRefreshView.setPercent(mCurrentDragPercent);
@@ -334,7 +342,7 @@ public class PullToRefreshView extends ViewGroup {
 
     private void onSecondaryPointerUp(MotionEvent ev) {
         final int pointerIndex = MotionEventCompat.getActionIndex(ev);
-        final int pointerId = MotionEventCompat.getPointerId(ev, pointerIndex);
+        final int pointerId    = MotionEventCompat.getPointerId(ev, pointerIndex);
         if (pointerId == mActivePointerId) {
             final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
             mActivePointerId = MotionEventCompat.getPointerId(ev, newPointerIndex);
@@ -381,10 +389,10 @@ public class PullToRefreshView extends ViewGroup {
             return;
 
         int height = getMeasuredHeight();
-        int width = getMeasuredWidth();
-        int left = getPaddingLeft();
-        int top = getPaddingTop();
-        int right = getPaddingRight();
+        int width  = getMeasuredWidth();
+        int left   = getPaddingLeft();
+        int top    = getPaddingTop();
+        int right  = getPaddingRight();
         int bottom = getPaddingBottom();
 
         mTarget.layout(left, top + mCurrentOffsetTop, left + width - right, top + height - bottom + mCurrentOffsetTop);
