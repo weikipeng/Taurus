@@ -28,57 +28,63 @@ import java.util.Random;
 public class RefreshView extends Drawable implements Drawable.Callback, Animatable {
 
     private static final float SCALE_START_PERCENT = 0.5f;
-    private static final int ANIMATION_DURATION = 1000;
+    private static final int   ANIMATION_DURATION  = 1000;
 
     private static final float SIDE_CLOUDS_INITIAL_SCALE = 1.05f;
-    private static final float SIDE_CLOUDS_FINAL_SCALE = 1.55f;
+    private static final float SIDE_CLOUDS_FINAL_SCALE   = 1.55f;
 
     private static final float CENTER_CLOUDS_INITIAL_SCALE = 0.8f;
-    private static final float CENTER_CLOUDS_FINAL_SCALE = 1.30f;
+    private static final float CENTER_CLOUDS_FINAL_SCALE   = 1.30f;
 
     private static final Interpolator ACCELERATE_DECELERATE_INTERPOLATOR = new AccelerateDecelerateInterpolator();
 
     // Multiply with this animation interpolator time
-    private static final int LOADING_ANIMATION_COEFFICIENT = 80;
+    private static final int LOADING_ANIMATION_COEFFICIENT   = 80;
     private static final int SLOW_DOWN_ANIMATION_COEFFICIENT = 6;
     // Amount of lines when is going lading animation
-    private static final int WIND_SET_AMOUNT = 10;
-    private static final int Y_SIDE_CLOUDS_SLOW_DOWN_COF = 4;
-    private static final int X_SIDE_CLOUDS_SLOW_DOWN_COF = 2;
-    private static final int MIN_WIND_LINE_WIDTH = 50;
-    private static final int MAX_WIND_LINE_WIDTH = 300;
-    private static final int MIN_WIND_X_OFFSET = 1000;
-    private static final int MAX_WIND_X_OFFSET = 2000;
-    private static final int RANDOM_Y_COEFFICIENT = 5;
+    private static final int WIND_SET_AMOUNT                 = 10;
+    private static final int Y_SIDE_CLOUDS_SLOW_DOWN_COF     = 4;
+    private static final int X_SIDE_CLOUDS_SLOW_DOWN_COF     = 2;
+    private static final int MIN_WIND_LINE_WIDTH             = 50;
+    private static final int MAX_WIND_LINE_WIDTH             = 300;
+    private static final int MIN_WIND_X_OFFSET               = 1000;
+    private static final int MAX_WIND_X_OFFSET               = 2000;
+    private static final int RANDOM_Y_COEFFICIENT            = 5;
 
-    private Context mContext;
+    private Context           mContext;
     private PullToRefreshView mParent;
-    private Matrix mMatrix;
-    private Matrix mAdditionalMatrix;
-    private Animation mAnimation;
+    private Matrix            mMatrix;
+    private Matrix            mAdditionalMatrix;
+    private Animation         mAnimation;
 
-    private int mTop;
-    private int mScreenWidth;
+    private int     mTop;
+    private int     mScreenWidth;
     private boolean mInverseDirection;
 
     //KEY: Y position, Value: X offset of wind
     private Map<Float, Float> mWinds;
-    private Paint mWindPaint;
-    private float mWindLineWidth;
-    private boolean mNewWindSet;
+    private Paint             mWindPaint;
+    private float             mWindLineWidth;
+    private boolean           mNewWindSet;
 
-    /**飞机宽度中心*/
-    private int mJetWidthCenter;
-    /**飞机高度中心*/
-    private int mJetHeightCenter;
-    /**飞机距离顶部的距离*/
+    /**
+     * 飞机宽度中心
+     */
+    private int   mJetWidthCenter;
+    /**
+     * 飞机高度中心
+     */
+    private int   mJetHeightCenter;
+    /**
+     * 飞机距离顶部的距离
+     */
     private float mJetTopOffset;
-    private int mFrontCloudHeightCenter;
-    private int mFrontCloudWidthCenter;
-    private int mRightCloudsWidthCenter;
-    private int mRightCloudsHeightCenter;
-    private int mLeftCloudsWidthCenter;
-    private int mLeftCloudsHeightCenter;
+    private int   mFrontCloudHeightCenter;
+    private int   mFrontCloudWidthCenter;
+    private int   mRightCloudsWidthCenter;
+    private int   mRightCloudsHeightCenter;
+    private int   mLeftCloudsWidthCenter;
+    private int   mLeftCloudsHeightCenter;
 
     private float mPercent = 0.0f;
 
@@ -91,7 +97,7 @@ public class RefreshView extends Drawable implements Drawable.Callback, Animatab
     private float mLoadingAnimationTime;
     private float mLastAnimationTime;
 
-    private Random mRandom;
+    private Random  mRandom;
     private boolean mEndOfRefreshing;
 
     private enum AnimationPart {
@@ -124,9 +130,9 @@ public class RefreshView extends Drawable implements Drawable.Callback, Animatab
         mJetTopOffset = mParent.getTotalDragDistance() * 0.5f;
         mTop = -mParent.getTotalDragDistance();
 
-        DevLogTool.getInstance(mContext).saveLog("屏幕宽度:"+mScreenWidth
-                +" 飞机距离顶部的距离mJetTopOffset:"+mJetTopOffset
-                +" mTop:"+mTop
+        DevLogTool.getInstance(mContext).saveLog("屏幕宽度:" + mScreenWidth
+                + " 飞机距离顶部的距离mJetTopOffset:" + mJetTopOffset
+                + " mTop:" + mTop
         );
     }
 
@@ -148,8 +154,7 @@ public class RefreshView extends Drawable implements Drawable.Callback, Animatab
     }
 
     public void offsetTopAndBottom(int offset) {
-        DevLogTool.getInstance(mContext).saveLog("------下移动画布局offsetTopAndBottom:"+offset
-        );
+        DevLogTool.getInstance(mContext).saveLog("------下移动画布局offsetTopAndBottom:" + offset);
         mTop += offset;
         invalidateSelf();
     }
@@ -270,7 +275,7 @@ public class RefreshView extends Drawable implements Drawable.Callback, Animatab
         Removing slowing of animation with dividing on {@LINK #SLOW_DOWN_ANIMATION_COEFFICIENT}
         And we should don't forget about distance that should "fly" line that depend on screen of device and x offset
         */
-        float cof = (mScreenWidth + xOffset) / (LOADING_ANIMATION_COEFFICIENT / SLOW_DOWN_ANIMATION_COEFFICIENT);
+        float cof  = (mScreenWidth + xOffset) / (LOADING_ANIMATION_COEFFICIENT / SLOW_DOWN_ANIMATION_COEFFICIENT);
         float time = mLoadingAnimationTime;
 
         // HORRIBLE HACK FOR REVERS ANIMATION THAT SHOULD WORK LIKE RESTART ANIMATION
@@ -285,14 +290,14 @@ public class RefreshView extends Drawable implements Drawable.Callback, Animatab
 
         // Taking current x position of drawing wind
         // For fully disappearing of line we should subtract wind line width
-        float x = (mScreenWidth - (time * cof)) + xOffset - mWindLineWidth;
+        float x    = (mScreenWidth - (time * cof)) + xOffset - mWindLineWidth;
         float xEnd = x + mWindLineWidth;
 
         canvas.drawLine(x, y, xEnd, y, mWindPaint);
     }
 
     private void drawSideClouds(Canvas canvas) {
-        Matrix matrixLeftClouds = mMatrix;
+        Matrix matrixLeftClouds  = mMatrix;
         Matrix matrixRightClouds = mAdditionalMatrix;
         matrixLeftClouds.reset();
         matrixRightClouds.reset();
@@ -371,9 +376,9 @@ public class RefreshView extends Drawable implements Drawable.Callback, Animatab
         matrix.reset();
         float dragPercent = Math.min(1f, Math.abs(mPercent));
 
-        float scale;
-        float overdragPercent = 0;
-        boolean overdrag = false;
+        float   scale;
+        float   overdragPercent = 0;
+        boolean overdrag        = false;
 
         if (mPercent > 1.0f) {
             overdrag = true;
@@ -389,8 +394,8 @@ public class RefreshView extends Drawable implements Drawable.Callback, Animatab
             scale = CENTER_CLOUDS_INITIAL_SCALE;
         }
 
-        float parallaxPercent = 0;
-        boolean parallax = false;
+        float   parallaxPercent = 0;
+        boolean parallax        = false;
         // Current y position of clouds
         float dragYOffset = mParent.getTotalDragDistance() * dragPercent;
         // Position when should start parallax scrolling

@@ -27,9 +27,13 @@ public class PullToRefreshView extends ViewGroup {
 
     private static final int INVALID_POINTER = -1;
 
-    private View              mTarget;
-    private ImageView         mRefreshImageView;
-    private Interpolator      mDecelerateInterpolator;
+    private View         mTarget;
+    private ImageView    mRefreshImageView;
+    private Interpolator mDecelerateInterpolator;
+
+    /**
+     * 滑动的临界值，当滑动距离超过这个值时才认为手势为滑动
+     */
     private int               mTouchSlop;
     /**
      * 总共可以拖动的距离
@@ -39,6 +43,9 @@ public class PullToRefreshView extends ViewGroup {
     private float             mCurrentDragPercent;
     private int               mCurrentOffsetTop;
     private boolean           mRefreshing;
+    /**
+     * 当前活动的按下点ID
+     */
     private int               mActivePointerId;
     private boolean           mIsBeingDragged;
     private float             mInitialMotionY;
@@ -89,6 +96,7 @@ public class PullToRefreshView extends ViewGroup {
         heightMeasureSpec = MeasureSpec.makeMeasureSpec(getMeasuredHeight() - getPaddingTop() - getPaddingBottom(), MeasureSpec.EXACTLY);
         mTarget.measure(widthMeasureSpec, heightMeasureSpec);
         mRefreshImageView.measure(widthMeasureSpec, heightMeasureSpec);
+        DevLogTool.getInstance(getContext()).saveLog("------onMeasure mTarget:" + mTarget);
     }
 
     private void ensureTarget() {
@@ -105,7 +113,13 @@ public class PullToRefreshView extends ViewGroup {
 
     @Override
     public boolean onInterceptTouchEvent(@NonNull MotionEvent ev) {
+        DevLogTool.getInstance(getContext()).saveLog(
+                "-----onInterceptTouchEvent isEnabled():" + isEnabled()
+                        + "  canChildScrollUp():" + canChildScrollUp()
+                        + "  mRefreshing:" + mRefreshing
+                        + "\nev:" + ev
 
+        );
         if (!isEnabled() || canChildScrollUp() || mRefreshing) {
             return false;
         }
@@ -118,6 +132,12 @@ public class PullToRefreshView extends ViewGroup {
                 mActivePointerId = MotionEventCompat.getPointerId(ev, 0);
                 mIsBeingDragged = false;
                 final float initialMotionY = getMotionEventY(ev, mActivePointerId);
+                DevLogTool.getInstance(getContext()).saveLog(
+                        "-----onInterceptTouchEvent MotionEvent.ACTION_DOWN"
+                                + "\n当前活动的按下点ID mActivePointerId :" + mActivePointerId
+                                + "\ninitialMotionY:" + initialMotionY
+                );
+
                 if (initialMotionY == -1) {
                     return false;
                 }
@@ -125,13 +145,19 @@ public class PullToRefreshView extends ViewGroup {
                 break;
             case MotionEvent.ACTION_MOVE:
                 if (mActivePointerId == INVALID_POINTER) {
+                    DevLogTool.getInstance(getContext()).saveLog("mActivePointerId == INVALID_POINTER");
                     return false;
                 }
                 final float y = getMotionEventY(ev, mActivePointerId);
                 if (y == -1) {
+                    DevLogTool.getInstance(getContext()).saveLog("getMotionEventY == -1");
                     return false;
                 }
                 final float yDiff = y - mInitialMotionY;
+                DevLogTool.getInstance(getContext()).saveLog("-----onInterceptTouchEvent MotionEvent.ACTION_MOVE"
+                        + " y:" + y + " mInitialMotionY:" + mInitialMotionY + " yDiff:" + yDiff
+                        + " mTouchSlop:" + mTouchSlop + " mIsBeingDragged:" + mIsBeingDragged
+                );
                 if (yDiff > mTouchSlop && !mIsBeingDragged) {
                     mIsBeingDragged = true;
                 }
@@ -145,12 +171,19 @@ public class PullToRefreshView extends ViewGroup {
                 onSecondaryPointerUp(ev);
                 break;
         }
+        DevLogTool.getInstance(getContext()).saveLog(
+                "-----onInterceptTouchEvent return mIsBeingDragged:" + mIsBeingDragged
+        );
 
         return mIsBeingDragged;
     }
 
     @Override
     public boolean onTouchEvent(@NonNull MotionEvent ev) {
+        DevLogTool.getInstance(getContext()).saveLog(
+                "-----onTouchEvent mIsBeingDragged:" + mIsBeingDragged
+                        + "\nev:" + ev
+        );
 
         if (!mIsBeingDragged) {
             return super.onTouchEvent(ev);
@@ -162,6 +195,7 @@ public class PullToRefreshView extends ViewGroup {
             case MotionEvent.ACTION_MOVE: {
                 final int pointerIndex = MotionEventCompat.findPointerIndex(ev, mActivePointerId);
                 if (pointerIndex < 0) {
+                    DevLogTool.getInstance(getContext()).saveLog("-----onTouchEvent MotionEvent.ACTION_MOVE: pointerIndex < 0");
                     return false;
                 }
 
@@ -169,12 +203,23 @@ public class PullToRefreshView extends ViewGroup {
                 final float yDiff     = y - mInitialMotionY;
                 final float scrollTop = yDiff * DRAG_RATE;
                 mCurrentDragPercent = scrollTop / mTotalDragDistance;
+                DevLogTool.getInstance(getContext()).saveLog(
+                        "-----onTouchEvent MotionEvent.ACTION_MOVE"
+                                + "\nDRAG_RATE:" + DRAG_RATE
+                                + "\nmInitialMotionY:" + mInitialMotionY
+                                + "\ny:" + y
+                                + "\nyDiff:" + yDiff
+                                + "\nscrollTop:" + scrollTop
+                                + "\nmCurrentDragPercent:" + mCurrentDragPercent
+                );
+
                 if (mCurrentDragPercent < 0) {
                     return false;
                 }
                 float boundedDragPercent = Math.min(1f, Math.abs(mCurrentDragPercent));
                 float extraOS            = Math.abs(scrollTop) - mTotalDragDistance;
                 float slingshotDist      = mTotalDragDistance;
+                //张力弹力百分比
                 float tensionSlingshotPercent = Math.max(0,
                         Math.min(extraOS, slingshotDist * 2) / slingshotDist);
                 float tensionPercent = (float) ((tensionSlingshotPercent / 4) - Math.pow(
@@ -182,6 +227,19 @@ public class PullToRefreshView extends ViewGroup {
                 float extraMove = (slingshotDist) * tensionPercent / 2;
                 int   targetY   = (int) ((slingshotDist * boundedDragPercent) + extraMove);
 
+                DevLogTool.getInstance(getContext()).saveLog(
+                        "-----onTouchEvent MotionEvent.ACTION_MOVE"
+                                + "\nboundedDragPercent:" + boundedDragPercent
+                                + "\nextraOS:" + extraOS
+                                + "\nslingshotDist:" + slingshotDist
+                                + "\ntensionSlingshotPercent:" + tensionSlingshotPercent
+                                + "\ntensionPercent:" + tensionPercent
+                                + "\nslingshotDist:" + slingshotDist
+                                + "\nboundedDragPercent:" + boundedDragPercent
+                                + "\nextraMove:" + extraMove
+                                + "\ntargetY:" + targetY
+                                + "\nmCurrentOffsetTop:" + mCurrentOffsetTop
+                );
                 mRefreshView.setPercent(mCurrentDragPercent);
                 setTargetOffsetTop(targetY - mCurrentOffsetTop, true);
                 break;
@@ -202,6 +260,10 @@ public class PullToRefreshView extends ViewGroup {
                 final float y             = MotionEventCompat.getY(ev, pointerIndex);
                 final float overScrollTop = (y - mInitialMotionY) * DRAG_RATE;
                 mIsBeingDragged = false;
+                DevLogTool.getInstance(getContext()).saveLog("-----onInterceptTouchEvent MotionEvent.ACTION_CANCEL"
+                    + "\noverScrollTop"+overScrollTop
+                    + "\nmTotalDragDistance"+mTotalDragDistance
+                );
                 if (overScrollTop > mTotalDragDistance) {
                     setRefreshing(true, true);
                 } else {
@@ -310,6 +372,10 @@ public class PullToRefreshView extends ViewGroup {
     }
 
     private void setRefreshing(boolean refreshing, final boolean notify) {
+        DevLogTool.getInstance(getContext()).saveLog("-----setRefreshing"
+                + " refreshing"+refreshing
+                + " notify"+notify
+        );
         if (mRefreshing != refreshing) {
             mNotify = notify;
             ensureTarget();
@@ -394,6 +460,13 @@ public class PullToRefreshView extends ViewGroup {
         int top    = getPaddingTop();
         int right  = getPaddingRight();
         int bottom = getPaddingBottom();
+
+        DevLogTool.getInstance(getContext()).saveLog("------onLayout left:" + left
+                + " 下拉刷新视图 top:" + top
+                + " top + mCurrentOffsetTop:" + (top + mCurrentOffsetTop)
+                + " 下拉刷新视图 top + height - bottom:" + (top + height - bottom)
+                + " top + height - bottom + mCurrentOffsetTop:" + (top + height - bottom + mCurrentOffsetTop)
+        );
 
         mTarget.layout(left, top + mCurrentOffsetTop, left + width - right, top + height - bottom + mCurrentOffsetTop);
         mRefreshImageView.layout(left, top, left + width - right, top + height - bottom);
